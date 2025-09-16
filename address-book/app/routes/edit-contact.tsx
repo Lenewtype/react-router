@@ -1,6 +1,7 @@
 import { Form, redirect, useNavigate } from "react-router";
 import type { Route } from "./+types/edit-contact";
 
+import { GameList } from "../components/GameList";
 import { getContact, updateContact } from "../data";
 
 export async function loader({ params }: Route.LoaderArgs) {
@@ -26,23 +27,25 @@ export default function EditContact({
 
     return (
         <Form key={contact.id} id="contact-form" method="post">
-            <p>
-                <span>Name</span>
+            <label>
+                <span>Username</span>
                 <input
                     aria-label="First name"
-                    defaultValue={contact.first}
-                    name="first"
-                    placeholder="First"
+                    defaultValue={contact.username}
+                    name="username"
+                    placeholder="Username"
                     type="text"
                 />
+            </label>
+            <label>
+                <span>Partner</span>
                 <input
-                    aria-label="Last name"
-                    defaultValue={contact.last}
-                    name="last"
-                    placeholder="Last"
-                    type="text"
+                    aria-label="Partner"
+                    value="partner"
+                    name="partner"
+                    type="checkbox"
                 />
-            </p>
+            </label>
             <label>
                 <span>Twitter</span>
                 <input
@@ -62,6 +65,10 @@ export default function EditContact({
                     type="text"
                 />
             </label>
+            <p>
+                <span>Games</span>
+                <GameList />
+            </p>
             <label>
                 <span>Notes</span>
                 <textarea

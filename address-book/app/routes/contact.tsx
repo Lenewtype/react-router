@@ -1,6 +1,7 @@
-import { Form } from "react-router";
+import { Form, useFetcher } from "react-router";
 import type { Route } from "./+types/contact";
-import { type ContactRecord, getContact } from "../data";
+import { type ContactRecord, getContact, updateContact } from "../data";
+import { FakeTwitchLogo } from "../fakeTwitchLogo";
 
 export async function loader({ params }: Route.LoaderArgs) {
     const contact = await getContact(params.contactId);
@@ -11,13 +12,20 @@ export async function loader({ params }: Route.LoaderArgs) {
     return { contact };
 }
 
+export async function action({ request, params }: Route.ActionArgs) {
+    const formData = await request.formData();
+    return updateContact(params.contactId, {
+        favorite: formData.get("favorite") === "true",
+    });
+}
+
 export default function Contact({ loaderData }: Route.ComponentProps) {
     const { contact } = loaderData;
     return (
         <div id="contact">
             <div>
                 <img
-                    alt={`${contact.first} ${contact.last} avatar`}
+                    alt={`${contact.username} avatar`}
                     key={contact.avatar}
                     src={contact.avatar}
                 />
@@ -25,10 +33,10 @@ export default function Contact({ loaderData }: Route.ComponentProps) {
 
             <div>
                 <h1>
-                    {contact.first || contact.last ? (
-                        <>
-                            {contact.first} {contact.last}
-                        </>
+                    {contact.username ? (
+                        <a href={`  https://twitch.com/${contact.username}`} target="_blank" rel="noreferrer">
+                            {contact.username} {contact.partner ? <FakeTwitchLogo /> : null}
+                        </a>
                     ) : (
                         <i>No Name</i>
                     )}
@@ -46,6 +54,15 @@ export default function Contact({ loaderData }: Route.ComponentProps) {
                 ) : null}
 
                 {contact.notes ? <p>{contact.notes}</p> : null}
+
+                {contact.games && contact.games.length > 0 ? (
+                    <div>
+                        <h2>Games</h2>
+                        <ul>
+                            {contact.games.map((game) => (<li key={game}>{game}</li>))}
+                        </ul>
+                    </div>
+                ) : null}
 
                 <div>
                     <Form action="edit">
@@ -77,10 +94,12 @@ function Favorite({
 }: {
     contact: Pick<ContactRecord, "favorite">;
 }) {
-    const favorite = contact.favorite;
+
+    const fetcher = useFetcher();
+    const favorite = fetcher.formData ? fetcher.formData.get("favorite") === "true" : contact.favorite;
 
     return (
-        <Form method="post">
+        <fetcher.Form method="post">
             <button
                 aria-label={
                     favorite
@@ -92,6 +111,6 @@ function Favorite({
             >
                 {favorite ? "★" : "☆"}
             </button>
-        </Form>
+        </fetcher.Form>
     );
 }

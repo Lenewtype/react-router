@@ -1,4 +1,5 @@
-import { Form, NavLink, Outlet, useNavigation } from "react-router";
+import { Form, NavLink, Outlet, useNavigation, useSubmit } from "react-router";
+import { useEffect } from "react";
 import { getContacts } from "../data";
 import type { Route } from "./+types/sidebar";
 
@@ -6,14 +7,23 @@ export async function loader({ request }: Route.LoaderArgs) {
     const url = new URL(request.url);
     const q = url.searchParams.get("q");
     const contacts = await getContacts(q);
-    return { contacts };
+    return { contacts, q };
 }
 
 export default function SidebarLayout({
     loaderData,
 }: Route.ComponentProps) {
-    const { contacts } = loaderData;
+    const { contacts, q } = loaderData;
     const navigation = useNavigation();
+    const submit = useSubmit();
+    const searching = navigation.location && new URLSearchParams(navigation.location.search).has("q");
+
+    useEffect(() => {
+        const searchField = document.getElementById("q");
+        if (searchField instanceof HTMLInputElement) {
+            searchField.value = q || "";
+        }
+    }, [q]);
 
     return (
         <>
@@ -22,17 +32,19 @@ export default function SidebarLayout({
                     <NavLink to="about">React Router Contacts</NavLink>
                 </h1>
                 <div>
-                    <Form id="search-form" role="search">
+                    <Form id="search-form" role="search" onChange={(event) => { submit(event.currentTarget, { replace: q !== null }); }}>
                         <input
                             aria-label="Search contacts"
+                            defaultValue={q || ""}
                             id="q"
                             name="q"
                             placeholder="Search"
                             type="search"
+                            className={searching ? "loading" : ""}
                         />
                         <div
                             aria-hidden
-                            hidden={true}
+                            hidden={!searching}
                             id="search-spinner"
                         />
                     </Form>
@@ -52,9 +64,9 @@ export default function SidebarLayout({
                                                 ? "pending"
                                                 : ""
                                     } to={`contacts/${contact.id}`}>
-                                        {contact.first || contact.last ? (
+                                        {contact.username ? (
                                             <>
-                                                {contact.first} {contact.last}
+                                                {contact.username}
                                             </>
                                         ) : (
                                             <i>No Name</i>
@@ -73,7 +85,7 @@ export default function SidebarLayout({
                     )}
                 </nav>
             </div>
-            <div id="detail" className={navigation.state === "loading" ? "loading" : ""}>
+            <div id="detail" className={navigation.state === "loading" && !searching ? "loading" : ""}>
                 <Outlet />
             </div>
         </>
