@@ -1,6 +1,6 @@
 import { Form, useFetcher } from "react-router";
 import type { Route } from "./+types/contact";
-import { type ContactRecord, getContact, updateContact } from "../data";
+import { type ContactRecord, getContact, updateContact, games } from "../data";
 import { FakeTwitchLogo } from "../fakeTwitchLogo";
 
 export async function loader({ params }: Route.LoaderArgs) {
@@ -53,16 +53,19 @@ export default function Contact({ loaderData }: Route.ComponentProps) {
                     </p>
                 ) : null}
 
-                {contact.notes ? <p>{contact.notes}</p> : null}
-
                 {contact.games && contact.games.length > 0 ? (
                     <div>
                         <h2>Games</h2>
                         <ul>
-                            {contact.games.map((game) => (<li key={game}>{game}</li>))}
+                            {games.map((game) => {
+                                if (contact.games?.includes(game.id))
+                                    return (<li key={game.id}>{game.name}</li>);
+                            })}
                         </ul>
                     </div>
                 ) : null}
+
+                {contact.notes ? <p>{contact.notes}</p> : null}
 
                 <div>
                     <Form action="edit">

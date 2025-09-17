@@ -487,6 +487,6 @@ i {
 }
 
 .gameList label:hover,
-.gamelist input:hover {
+.gameList input:hover {
   cursor: pointer;
 }

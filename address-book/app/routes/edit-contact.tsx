@@ -12,9 +12,30 @@ export async function loader({ params }: Route.LoaderArgs) {
     return { contact };
 }
 
+
+const parseGameValues = (formData: FormData): number[] => {
+    const games: number[] = [];
+    formData.forEach((_value: FormDataEntryValue, key: string) => {
+        if (key.startsWith("game_")) {
+            const val = parseInt(key.replace("game_", ""));
+            games.push(val);
+        }
+    });
+    return games;
+};
+
 export async function action({ request, params }: Route.ActionArgs) {
     const formData = await request.formData();
-    const updates = Object.fromEntries(formData);
+    const updates: any = {
+        ...Object.fromEntries(formData),
+        games: parseGameValues(formData),
+    };
+
+    Object.keys(updates).forEach((key) => {
+        if (key.startsWith("game_")) {
+            delete updates[key];
+        }
+    });
     await updateContact(params.contactId, updates);
     return redirect(`/contacts/${params.contactId}`);
 }
@@ -65,10 +86,10 @@ export default function EditContact({
                     type="text"
                 />
             </label>
-            <p>
+            <div>
                 <span>Games</span>
-                <GameList />
-            </p>
+                <GameList initialSelected={contact.games ?? []} />
+            </div>
             <label>
                 <span>Notes</span>
                 <textarea
